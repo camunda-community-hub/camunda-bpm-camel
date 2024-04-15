@@ -15,6 +15,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.assertj.core.api.Assertions;
+import org.camunda.bpm.camel.component.CamundaBpmConstants;
 import org.camunda.bpm.engine.HistoryService;
 import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
@@ -32,28 +33,24 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.camunda.bpm.camel.component.CamundaBpmConstants.*;
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:receive-from-camel-config.xml")
 public class ReceiveFromCamelTest {
-
   MockEndpoint mockEndpoint;
 
-  @Autowired(required = true)
+  @Autowired
   ApplicationContext applicationContext;
 
-  @Autowired(required = true)
+  @Autowired
   CamelContext camelContext;
 
-  @Autowired(required = true)
+  @Autowired
   RuntimeService runtimeService;
 
-  @Autowired(required = true)
+  @Autowired
   HistoryService historyService;
 
-  @Autowired(required = true)
+  @Autowired
   @Rule
   public ProcessEngineRule processEngineRule;
 
@@ -65,15 +62,25 @@ public class ReceiveFromCamelTest {
 
   @Test
   @Deployment(resources = {"process/ReceiveFromCamel.bpmn20.xml"})
-  public void doTest() throws Exception {
-    Map<String, Object> processVariables = new HashMap<String, Object>();
+  public void doTest() {
+    Map<String, Object> processVariables = new HashMap<>();
     processVariables.put("var1", "foo");
     processVariables.put("var2", "bar");
     ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("receiveFromCamelProcess", processVariables);
 
     // Verify that a process instance has executed and there is one instance executing now
-    assertThat(historyService.createHistoricProcessInstanceQuery().processDefinitionKey("receiveFromCamelProcess").count()).isEqualTo(1);
-    assertThat(runtimeService.createProcessInstanceQuery().processDefinitionKey("receiveFromCamelProcess").count()).isEqualTo(1);
+    Assertions
+        .assertThat(historyService
+            .createHistoricProcessInstanceQuery()
+            .processDefinitionKey("receiveFromCamelProcess")
+            .count())
+        .isEqualTo(1);
+    Assertions
+        .assertThat(runtimeService
+            .createProcessInstanceQuery()
+            .processDefinitionKey("receiveFromCamelProcess")
+            .count())
+        .isEqualTo(1);
 
     /*
      * We need the process instance ID to be able to send the message to it
@@ -82,12 +89,25 @@ public class ReceiveFromCamelTest {
      * http://camundabpm.blogspot.de/2013/06/introducing-activity-instance-model-to.html
      */
     ProducerTemplate tpl = camelContext.createProducerTemplate();
-    tpl.sendBodyAndProperty("direct:sendToCamundaBpm", null, EXCHANGE_HEADER_PROCESS_INSTANCE_ID, processInstance.getId());
+    tpl.sendBodyAndProperty(
+        "direct:sendToCamundaBpm", 
+        null, 
+        CamundaBpmConstants.EXCHANGE_HEADER_PROCESS_INSTANCE_ID, 
+        processInstance.getId());
 
     // Assert that the camunda BPM process instance ID has been added as a property to the message
-    assertThat(mockEndpoint.assertExchangeReceived(0).getProperty(EXCHANGE_HEADER_PROCESS_INSTANCE_ID)).isEqualTo(processInstance.getId());
+    Assertions
+        .assertThat(mockEndpoint
+            .assertExchangeReceived(0)
+            .getProperty(CamundaBpmConstants.EXCHANGE_HEADER_PROCESS_INSTANCE_ID))
+        .isEqualTo(processInstance.getId());
 
     // Assert that the process instance is finished
-    assertThat(runtimeService.createProcessInstanceQuery().processDefinitionKey("receiveFromCamelProcess").count()).isEqualTo(0);
+    Assertions
+        .assertThat(runtimeService
+            .createProcessInstanceQuery()
+            .processDefinitionKey("receiveFromCamelProcess")
+            .count())
+        .isZero();
   }
 }

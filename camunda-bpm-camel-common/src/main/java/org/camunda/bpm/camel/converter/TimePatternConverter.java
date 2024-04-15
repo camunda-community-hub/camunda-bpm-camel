@@ -8,6 +8,7 @@ import org.apache.camel.converter.DurationConverter;
 public class TimePatternConverter {
 
   private TimePatternConverter() {
+    throw new UnsupportedOperationException("This class cannot be instantiated");
   }
 
   public static long toMilliSeconds(String value) {

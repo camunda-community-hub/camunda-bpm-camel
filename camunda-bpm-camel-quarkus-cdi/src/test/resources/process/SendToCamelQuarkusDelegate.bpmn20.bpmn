@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" targetNamespace="Examples" exporter="Camunda Modeler" exporterVersion="5.18.0" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+  <process id="sendToCamelProcess" isExecutable="true" camunda:historyTimeToLive="180">
+    <startEvent id="start">
+      <outgoing>flow1</outgoing>
+    </startEvent>
+    <sequenceFlow id="flow1" sourceRef="start" targetRef="sendToCamelServiceTask" />
+    <serviceTask id="sendToCamelServiceTask" name="Send to Camel" camunda:delegateExpression="${serviceDelegateBean}">
+      <extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="endpoint">direct:sendToCamelServiceTask</camunda:inputParameter>
+          <camunda:inputParameter name="content">
+            <camunda:map>
+              <camunda:entry key="var1">${var1}</camunda:entry>
+            </camunda:map>
+          </camunda:inputParameter>
+        </camunda:inputOutput>
+      </extensionElements>
+      <incoming>flow1</incoming>
+      <outgoing>flow2</outgoing>
+    </serviceTask>
+    <sequenceFlow id="flow2" sourceRef="sendToCamelServiceTask" targetRef="logProcessVariableServiceTask" />
+    <scriptTask id="logProcessVariableServiceTask" name="Log process&#10;variable" scriptFormat="groovy">
+      <incoming>flow2</incoming>
+      <outgoing>Flow_0lmdzfn</outgoing>
+      <script>log.info(var1)</script>
+    </scriptTask>
+    <endEvent id="Event_1tcc1cz">
+      <incoming>Flow_0lmdzfn</incoming>
+    </endEvent>
+    <sequenceFlow id="Flow_0lmdzfn" sourceRef="logProcessVariableServiceTask" targetRef="Event_1tcc1cz" />
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_camelProcess">
+    <bpmndi:BPMNPlane id="BPMNPlane_camelProcess" bpmnElement="sendToCamelProcess">
+      <bpmndi:BPMNShape id="BPMNShape_start" bpmnElement="start">
+        <omgdc:Bounds x="160" y="93" width="35" height="35" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_serviceTask1" bpmnElement="sendToCamelServiceTask">
+        <omgdc:Bounds x="260" y="80" width="100" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0jrxijt_di" bpmnElement="logProcessVariableServiceTask">
+        <omgdc:Bounds x="432" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1tcc1cz_di" bpmnElement="Event_1tcc1cz">
+        <omgdc:Bounds x="612" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge_flow1" bpmnElement="flow1">
+        <omgdi:waypoint x="195" y="110" />
+        <omgdi:waypoint x="260" y="110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_flow2" bpmnElement="flow2" targetElement="Activity_0jrxijt_di">
+        <omgdi:waypoint x="360" y="110" />
+        <omgdi:waypoint x="432" y="110" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="280" y="160" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lmdzfn_di" bpmnElement="Flow_0lmdzfn">
+        <omgdi:waypoint x="532" y="120" />
+        <omgdi:waypoint x="612" y="120" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

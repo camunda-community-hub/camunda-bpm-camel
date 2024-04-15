@@ -1,30 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="Examples">
-  <process id="smokeTestProcess" isExecutable="true">
-    <startEvent id="start"></startEvent>
-    <sequenceFlow id="flow1" sourceRef="start" targetRef="theTask"></sequenceFlow>
-    <userTask id="theTask" name="My Task"></userTask>
-    <sequenceFlow id="flow2" sourceRef="theTask" targetRef="theEnd"></sequenceFlow>
-    <endEvent id="theEnd"></endEvent>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" targetNamespace="Examples" exporter="Camunda Modeler" exporterVersion="5.18.0">
+  <process id="smokeTestProcess" isExecutable="true" camunda:historyTimeToLive="180">
+    <startEvent id="start" />
+    <sequenceFlow id="flow1" sourceRef="start" targetRef="theTask" />
+    <userTask id="theTask" name="My Task" />
+    <sequenceFlow id="flow2" sourceRef="theTask" targetRef="theEnd" />
+    <endEvent id="theEnd" />
   </process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_smokeTestProcess">
-    <bpmndi:BPMNPlane bpmnElement="smokeTestProcess" id="BPMNPlane_smokeTestProcess">
-      <bpmndi:BPMNShape bpmnElement="theTask" id="BPMNShape_theTask">
-        <omgdc:Bounds height="60.0" width="100.0" x="166.0" y="100.0"></omgdc:Bounds>
+    <bpmndi:BPMNPlane id="BPMNPlane_smokeTestProcess" bpmnElement="smokeTestProcess">
+      <bpmndi:BPMNShape id="BPMNShape_start" bpmnElement="start">
+        <omgdc:Bounds x="160" y="112" width="35" height="35" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="start" id="BPMNShape_start">
-        <omgdc:Bounds height="35.0" width="35.0" x="50.0" y="112.0"></omgdc:Bounds>
+      <bpmndi:BPMNShape id="BPMNShape_theTask" bpmnElement="theTask">
+        <omgdc:Bounds x="276" y="100" width="100" height="60" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="theEnd" id="BPMNShape_theEnd">
-        <omgdc:Bounds height="35.0" width="35.0" x="370.0" y="112.0"></omgdc:Bounds>
+      <bpmndi:BPMNShape id="BPMNShape_theEnd" bpmnElement="theEnd">
+        <omgdc:Bounds x="480" y="112" width="35" height="35" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
-        <omgdi:waypoint x="266.0" y="130.0"></omgdi:waypoint>
-        <omgdi:waypoint x="370.0" y="129.0"></omgdi:waypoint>
+      <bpmndi:BPMNEdge id="BPMNEdge_flow1" bpmnElement="flow1">
+        <omgdi:waypoint x="195" y="129" />
+        <omgdi:waypoint x="276" y="130" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
-        <omgdi:waypoint x="85.0" y="129.0"></omgdi:waypoint>
-        <omgdi:waypoint x="166.0" y="130.0"></omgdi:waypoint>
+      <bpmndi:BPMNEdge id="BPMNEdge_flow2" bpmnElement="flow2">
+        <omgdi:waypoint x="376" y="130" />
+        <omgdi:waypoint x="480" y="129" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

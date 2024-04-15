@@ -15,11 +15,13 @@ package org.camunda.bpm.camel.spring;
 import org.camunda.bpm.camel.component.CamundaBpmComponent;
 import org.camunda.bpm.engine.ProcessEngine;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class SpringCamundaBpmComponent extends CamundaBpmComponent {
 
   @Autowired
-  public void setProcessEngine(ProcessEngine processEngine) {
-    super.setProcessEngine(processEngine);
+  public SpringCamundaBpmComponent(ProcessEngine processEngine) {
+    super(processEngine);
   }
 }

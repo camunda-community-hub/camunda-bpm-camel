@@ -18,11 +18,9 @@ package org.camunda.bpm.camel.spring.util;
  *
  */
 public class BrokenServiceException extends Exception {
-
 	private static final long serialVersionUID = 1L;
 
 	public BrokenServiceException(String message) {
 		super(message);
 	}
-	
 }

@@ -15,16 +15,24 @@ package org.camunda.bpm.camel.spring;
 import org.apache.camel.CamelContext;
 import org.camunda.bpm.camel.common.CamelServiceCommonImpl;
 import org.camunda.bpm.engine.ProcessEngine;
-import org.springframework.beans.factory.annotation.Required;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class CamelServiceImpl extends CamelServiceCommonImpl {
 
-  @Required
+  @Autowired
+  public CamelServiceImpl(ProcessEngine processEngine, CamelContext camelContext) {
+    setProcessEngine(processEngine);
+    setCamelContext(camelContext);
+  }
+
+  @Override
   public void setProcessEngine(ProcessEngine processEngine) {
     this.processEngine = processEngine;
   }
 
-  @Required
+  @Override
   public void setCamelContext(CamelContext camelContext) {
     this.camelContext = camelContext;
   }

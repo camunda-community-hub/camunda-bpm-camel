@@ -35,11 +35,10 @@ import org.slf4j.LoggerFactory;
  * @author Ryan Johnston (@rjfsu), Tijs Rademakers
  */
 public class CamundaBpmEndpointDefaultImpl extends DefaultEndpoint implements CamundaBpmEndpoint {
-
     private static final Logger LOG = LoggerFactory.getLogger(CamundaBpmEndpointDefaultImpl.class);
 
-    private CamundaBpmComponent component;
-    private Map<String, Object> parameters;
+    private final CamundaBpmComponent component;
+    private final Map<String, Object> parameters;
     private final ParsedUri uri;
 
     public CamundaBpmEndpointDefaultImpl(String uri, ParsedUri parsedUri, CamundaBpmComponent component,
@@ -54,14 +53,15 @@ public class CamundaBpmEndpointDefaultImpl extends DefaultEndpoint implements Ca
         return this.component.getProcessEngine();
     }
 
-    public Producer createProducer() throws Exception {
+    public Producer createProducer() {
         return CamundaBpmProducerFactory.createProducer(this, this.uri, this.parameters);
     }
 
-    public Consumer createConsumer(Processor processor) throws Exception {
+    public Consumer createConsumer(Processor processor) {
         return null;
     }
 
+    @Override
     public boolean isSingleton() {
         return true;
     }

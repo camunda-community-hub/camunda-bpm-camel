@@ -19,11 +19,9 @@ import static org.camunda.bpm.camel.component.CamundaBpmConstants.EXCHANGE_HEADE
 import static org.camunda.bpm.camel.component.CamundaBpmConstants.EXCHANGE_HEADER_TASK;
 
 import java.lang.reflect.Method;
-import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.camel.*;
@@ -55,14 +53,12 @@ public class BatchConsumer extends ScheduledBatchPollingConsumer {
     private final TaskProcessor taskProcessor;
 
     static {
-
         try {
             deserializeVariablesMethod = ExternalTaskQueryTopicBuilder.class.getMethod(
                     "enableCustomObjectDeserialization");
         } catch (Exception e) {
             // ignore because the Camunda version below 7.6.0 is used
         }
-
     }
 
     public static boolean systemKnowsDeserializationOfVariables() {
@@ -73,9 +69,7 @@ public class BatchConsumer extends ScheduledBatchPollingConsumer {
             final long retryTimeout, final long[] retryTimeouts, final long lockDuration, final String topic,
             final boolean completeTask, final List<String> variablesToFetch, final boolean deserializeVariables,
             final String workerId) {
-
         super(endpoint, processor);
-
         this.camundaEndpoint = endpoint;
         this.lockDuration = lockDuration;
         this.topic = topic;
@@ -83,7 +77,6 @@ public class BatchConsumer extends ScheduledBatchPollingConsumer {
         this.variablesToFetch = variablesToFetch;
         this.deserializeVariables = deserializeVariables;
         this.workerId = workerId;
-
         this.taskProcessor = new TaskProcessor(endpoint,
                 topic,
                 retries,
@@ -92,16 +85,13 @@ public class BatchConsumer extends ScheduledBatchPollingConsumer {
                 completeTask,
                 true,
                 workerId);
-
     }
 
     public BatchConsumer(final CamundaBpmEndpoint endpoint, final Processor processor,
             final ScheduledExecutorService executor, final int retries, final long retryTimeout,
             final long[] retryTimeouts, final long lockDuration, final String topic, final boolean completeTask,
             final List<String> variablesToFetch, final boolean deserializeVariables, final String workerId) {
-
         super(endpoint, processor, executor);
-
         this.camundaEndpoint = endpoint;
         this.lockDuration = lockDuration;
         this.topic = topic;
@@ -109,7 +99,6 @@ public class BatchConsumer extends ScheduledBatchPollingConsumer {
         this.variablesToFetch = variablesToFetch;
         this.deserializeVariables = deserializeVariables;
         this.workerId = workerId;
-
         this.taskProcessor = new TaskProcessor(endpoint,
                 topic,
                 retries,
@@ -118,7 +107,6 @@ public class BatchConsumer extends ScheduledBatchPollingConsumer {
                 completeTask,
                 true,
                 workerId);
-
     }
 
     @Override
@@ -129,13 +117,12 @@ public class BatchConsumer extends ScheduledBatchPollingConsumer {
 
     @Override
     public int processBatch(Queue<Object> exchanges) throws Exception {
-
         int total = exchanges.size();
         int answer = total;
 
         for (int index = 0; index < total && isBatchAllowed(); index++) {
             // only loop if we are started (allowed to run)
-            // use poll to remove the head so it does not consume memory even
+            // use poll to remove the head, so it does not consume memory even
             // after we have processed it
             Exchange exchange = (Exchange) exchanges.poll();
             // add current index and total as properties
@@ -155,29 +142,22 @@ public class BatchConsumer extends ScheduledBatchPollingConsumer {
         }
 
         // drain any in progress files as we are done with this batch
-        removeExcessiveInProgressTasks(CastUtils.cast((Queue<?>) exchanges, Exchange.class), 0);
+        removeExcessiveInProgressTasks(CastUtils.cast(exchanges, Exchange.class), 0);
 
         return answer;
-
     }
 
     private boolean processExchange(final Exchange exchange) throws Exception {
-
         taskProcessor.process(exchange);
         final Processor currentProcessor = getProcessor();
-        if (currentProcessor instanceof AsyncProcessor) {
-            ((AsyncProcessor) currentProcessor).process(exchange, new AsyncCallback() {
-                @Override
-                public void done(boolean doneSync) {
-                    // we are not interested in this event
-                }
+        if (currentProcessor instanceof AsyncProcessor asyncProcessor) {
+            asyncProcessor.process(exchange, doneSync -> {
+                // we are not interested in this event
             });
         } else {
             currentProcessor.process(exchange);
         }
-
         return true;
-
     }
 
     /**
@@ -189,77 +169,62 @@ public class BatchConsumer extends ScheduledBatchPollingConsumer {
      *            the limit
      */
     protected void removeExcessiveInProgressTasks(Queue<Exchange> exchanges, int limit) {
-
         while (exchanges.size() > limit) {
             // must remove last
             Exchange exchange = exchanges.poll();
             releaseTask(exchange);
         }
-
     }
 
     private void releaseTask(final Exchange exchange) {
-
-        exchange.setProperty(Exchange.ROLLBACK_ONLY, Boolean.TRUE);
+        exchange.setRollbackOnly(true);
         taskProcessor.internalProcessing(exchange);
-
     }
 
     private ExternalTaskService getExternalTaskService() {
-
         return camundaEndpoint.getProcessEngine().getExternalTaskService();
-
     }
 
     protected int poll() throws Exception {
-
         int messagesPolled = 0;
-
-        PriorityQueue<Exchange> exchanges = new PriorityQueue<Exchange>(
+        PriorityQueue<Exchange> exchanges = new PriorityQueue<>(
                 /*
                  * default-value, unfortunately
                  * PriorityQueue.DEFAULT_INITIAL_CAPACITY is private and the
                  * constructor with one parameter of type Comparator is not
                  * available in JSE 7
                  */
-                11, new Comparator<Exchange>() {
-                    @Override
-                    public int compare(Exchange o1, Exchange o2) {
-                        Long prio1 = (Long) o1.getProperty(EXCHANGE_HEADER_PROCESS_PRIO, 0);
-                        Long prio2 = (Long) o2.getProperty(EXCHANGE_HEADER_PROCESS_PRIO, 0);
-                        return prio1.compareTo(prio2);
-                    }
+                11, (o1, o2) -> {
+                    Long priority1 =
+                        o1.getProperty(EXCHANGE_HEADER_PROCESS_PRIO, 0, Long.class);
+                    Long priority2 =
+                        o2.getProperty(EXCHANGE_HEADER_PROCESS_PRIO, 0, Long.class);
+                    return priority1.compareTo(priority2);
                 });
 
         if (isPollAllowed()) {
-
             final List<LockedExternalTask> tasks = CamundaUtils.retryIfOptimisticLockingException(
-                    new Callable<List<LockedExternalTask>>() {
-                        @Override
-                        public List<LockedExternalTask> call() {
-                            ExternalTaskQueryTopicBuilder query = getExternalTaskService() //
-                                    .fetchAndLock(maxMessagesPerPoll, workerId, true) //
-                                    .topic(topic, lockDuration) //
-                                    .variables(variablesToFetch);
-                            if (deserializeVariables && (deserializeVariablesMethod != null)) {
-                                try {
-                                    query = (ExternalTaskQueryTopicBuilder) deserializeVariablesMethod.invoke(query);
-                                } catch (Exception e) {
-                                    throw new RuntimeCamelException(e);
-                                }
-                            }
-                            return query.execute();
+                () -> {
+                    ExternalTaskQueryTopicBuilder query = getExternalTaskService() //
+                            .fetchAndLock(maxMessagesPerPoll, workerId, true) //
+                            .topic(topic, lockDuration) //
+                            .variables(variablesToFetch);
+                    if (deserializeVariables && (deserializeVariablesMethod != null)) {
+                        try {
+                            query = (ExternalTaskQueryTopicBuilder) deserializeVariablesMethod.invoke(query);
+                        } catch (Exception e) {
+                            throw new RuntimeCamelException(e);
                         }
-                    });
+                    }
+                    return query.execute();
+                });
 
             messagesPolled = tasks.size();
 
             for (final LockedExternalTask task : tasks) {
-
                 final ExchangePattern pattern = completeTask ? ExchangePattern.InOut : ExchangePattern.InOnly;
-                ExtendedExchange exchange = getEndpoint().createExchange(pattern).adapt(ExtendedExchange.class);
-
-                exchange.setFromEndpoint(getEndpoint());
+                Exchange exchange = getEndpoint().createExchange(pattern);
+                exchange.getExchangeExtension().setFromEndpoint(getEndpoint());
                 exchange.setExchangeId(task.getWorkerId() + "/" + task.getId());
                 exchange.setProperty(EXCHANGE_HEADER_PROCESS_INSTANCE_ID, task.getProcessInstanceId());
                 exchange.setProperty(EXCHANGE_HEADER_PROCESS_DEFINITION_KEY, task.getProcessDefinitionKey());
@@ -269,23 +234,15 @@ public class BatchConsumer extends ScheduledBatchPollingConsumer {
                 final Message in = exchange.getIn();
                 in.setHeader(EXCHANGE_HEADER_TASK, task);
                 in.setBody(task.getVariables());
-
                 exchanges.add(exchange);
-
             }
-
         }
-
         processBatch(CastUtils.cast(exchanges));
-
         return messagesPolled;
-
     }
 
     public int getTimeout() {
-
         return timeout;
-
     }
 
     /**
@@ -302,9 +259,6 @@ public class BatchConsumer extends ScheduledBatchPollingConsumer {
      *            the timeout value
      */
     public void setTimeout(int timeout) {
-
         this.timeout = timeout;
-
     }
-
 }

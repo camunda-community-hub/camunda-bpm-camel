@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" targetNamespace="Examples" exporter="Camunda Modeler" exporterVersion="5.18.0" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+  <process id="startProcessFromRoute" isExecutable="true" camunda:historyTimeToLive="180">
+    <startEvent id="start">
+      <outgoing>SequenceFlow_2</outgoing>
+    </startEvent>
+    <sequenceFlow id="SequenceFlow_2" name="" sourceRef="start" targetRef="Activity_0dhg4qg" />
+    <endEvent id="end">
+      <incoming>SequenceFlow_3</incoming>
+    </endEvent>
+    <sequenceFlow id="SequenceFlow_3" name="" sourceRef="sendToCamelServiceTask" targetRef="end" />
+    <scriptTask id="Activity_0dhg4qg" name="Log process&#10;variable" scriptFormat="groovy">
+      <incoming>SequenceFlow_2</incoming>
+      <outgoing>Flow_111obad</outgoing>
+      <script>log.info(var1)</script>
+    </scriptTask>
+    <serviceTask id="sendToCamelServiceTask" name="Send process variable to Camel" camunda:delegateExpression="${serviceDelegateBean}">
+      <extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="endpoint">direct:processVariable</camunda:inputParameter>
+          <camunda:inputParameter name="content">
+            <camunda:map>
+              <camunda:entry key="var1">${var1}</camunda:entry>
+            </camunda:map>
+          </camunda:inputParameter>
+        </camunda:inputOutput>
+      </extensionElements>
+      <incoming>Flow_111obad</incoming>
+      <outgoing>SequenceFlow_3</outgoing>
+    </serviceTask>
+    <sequenceFlow id="Flow_111obad" sourceRef="Activity_0dhg4qg" targetRef="sendToCamelServiceTask" />
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_camelProcess">
+    <bpmndi:BPMNPlane id="BPMNPlane_camelProcess" bpmnElement="startProcessFromRoute">
+      <bpmndi:BPMNShape id="Activity_0jrxijt_di" bpmnElement="Activity_0dhg4qg">
+        <omgdc:Bounds x="228" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_serviceTask1" bpmnElement="sendToCamelServiceTask">
+        <omgdc:Bounds x="408" y="90" width="100" height="60" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_end" bpmnElement="end">
+        <omgdc:Bounds x="612" y="102" width="35" height="35" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="629" y="184" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_start" bpmnElement="start">
+        <omgdc:Bounds x="121" y="102" width="35" height="35" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="138" y="182" width="0" height="0" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_2" bpmnElement="SequenceFlow_2" sourceElement="BPMNShape_start" targetElement="Activity_0jrxijt_di">
+        <omgdi:waypoint x="156" y="119" />
+        <omgdi:waypoint x="192" y="119" />
+        <omgdi:waypoint x="192" y="120" />
+        <omgdi:waypoint x="228" y="120" />
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds x="177" y="159" width="6" height="6" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_3" bpmnElement="SequenceFlow_3" sourceElement="BPMNShape_serviceTask1" targetElement="BPMNShape_end">
+        <omgdi:waypoint x="508" y="120" />
+        <omgdi:waypoint x="560" y="120" />
+        <omgdi:waypoint x="560" y="119" />
+        <omgdi:waypoint x="612" y="119" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_111obad_di" bpmnElement="Flow_111obad">
+        <omgdi:waypoint x="328" y="120" />
+        <omgdi:waypoint x="408" y="120" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

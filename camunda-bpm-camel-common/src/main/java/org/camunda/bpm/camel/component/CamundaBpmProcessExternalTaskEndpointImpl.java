@@ -30,13 +30,12 @@ import org.camunda.bpm.engine.ProcessEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CamundaBpmProcessExternalTaskEndpointImpl extends ProcessorEndpoint implements
-    CamundaBpmEndpoint {
-
+public class CamundaBpmProcessExternalTaskEndpointImpl extends ProcessorEndpoint
+    implements CamundaBpmEndpoint {
   private static final Logger LOG = LoggerFactory.getLogger(
       CamundaBpmProcessExternalTaskEndpointImpl.class);
 
-  private CamundaBpmComponent component;
+  private final CamundaBpmComponent component;
 
   // parameters
   private final String topic;
@@ -49,9 +48,7 @@ public class CamundaBpmProcessExternalTaskEndpointImpl extends ProcessorEndpoint
   public CamundaBpmProcessExternalTaskEndpointImpl(final String endpointUri,
       final CamundaBpmComponent component,
       final Map<String, Object> parameters) {
-
     super(endpointUri, component);
-
     this.component = component;
 
     if (parameters.containsKey(TOPIC_PARAMETER)) {
@@ -95,14 +92,11 @@ public class CamundaBpmProcessExternalTaskEndpointImpl extends ProcessorEndpoint
     } else {
       this.workerId = null;
     }
-
   }
 
   @Override
   public boolean isSingleton() {
-
     return true;
-
   }
 
   @Override
@@ -113,17 +107,20 @@ public class CamundaBpmProcessExternalTaskEndpointImpl extends ProcessorEndpoint
 
   @Override
   public ProcessEngine getProcessEngine() {
-
     return component.getProcessEngine();
-
   }
 
   @Override
-  protected Processor createProcessor() throws Exception {
-
-    return new TaskProcessor(this, topic, retries, retryTimeout, retryTimeouts, true, onCompletion,
+  protected Processor createProcessor() {
+    return new TaskProcessor(
+        this,
+        topic,
+        retries,
+        retryTimeout,
+        retryTimeouts,
+        true,
+        onCompletion,
         workerId);
-
   }
 
 }

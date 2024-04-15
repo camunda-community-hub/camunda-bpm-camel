@@ -16,29 +16,31 @@
   <packaging>pom</packaging>
 
   <properties>
-    <java.version>11</java.version>
+    <java.version>17</java.version>
     <version.java>${java.version}</version.java>
     <maven.compiler.release>${java.version}</maven.compiler.release>
 
-    <camunda-bpm.version>7.16.0</camunda-bpm.version>
-    <camel.version>3.16.0</camel.version>
-    <spring.framework.version>5.3.19</spring.framework.version>
-    <sl4j.version>1.7.36</sl4j.version>
+    <camunda-bpm.version>7.21.0-alpha4</camunda-bpm.version>
+    <camel.version>4.4.0</camel.version>
+    <spring.framework.version>6.1.3</spring.framework.version>
+    <sl4j.version>2.0.12</sl4j.version>
 
-    <junit.version>4.13.2</junit.version>
-    <assertj.version>3.23.1</assertj.version>
-    <mockito.version>2.28.2</mockito.version>
-    <powermock.version>2.0.9</powermock.version>
+    <junit.version>5.10.2</junit.version>
+    <assertj.version>3.25.3</assertj.version>
+    <mockito.version>5.11.0</mockito.version>
+
+    <!-- TODO MBu: when we upgrade this version to 2.2.224, the tests fail -->
     <h2.version>1.4.197</h2.version>
 
-     <!-- overwrite value from parent to allow Java 11-->
-    <plugin.version.javadoc>3.3.2</plugin.version.javadoc>
+    <!-- overwrite value from parent to allow Java 11-->
+    <plugin.version.javadoc>3.6.3</plugin.version.javadoc>
   </properties>
 
   <modules>
     <module>camunda-bpm-camel-common</module>
     <module>camunda-bpm-camel-common-tests</module>
     <module>camunda-bpm-camel-spring</module>
+    <module>camunda-bpm-camel-quarkus-cdi</module>
   </modules>
 
   <dependencyManagement>
@@ -74,6 +76,13 @@
         <groupId>org.camunda.bpm.extension.camel</groupId>
         <artifactId>camunda-bpm-camel-spring</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>${junit.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -145,7 +154,7 @@
         <activeByDefault>false</activeByDefault>
       </activation>
       <modules>
-        <module>camunda-bpm-camel-cdi</module>
+        <module>camunda-bpm-camel-quarkus-cdi</module>
       </modules>
     </profile>
 

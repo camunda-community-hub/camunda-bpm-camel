@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class BrokenService {
-
 	private static final Logger LOG = LoggerFactory.getLogger(BrokenService.class);
 	
 	/**
@@ -35,5 +34,4 @@ public class BrokenService {
 		LOG.info("{} called", this.getClass().getSimpleName());
 		throw new BrokenServiceException("Provoked failure");
 	}
-	
 }

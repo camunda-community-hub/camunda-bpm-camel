@@ -1,325 +1,328 @@
 package org.camunda.bpm.camel.component.producer;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.camunda.bpm.camel.component.CamundaBpmConstants.ACTIVITY_ID_PARAMETER;
-import static org.camunda.bpm.camel.component.CamundaBpmConstants.COPY_MESSAGE_BODY_AS_PROCESS_VARIABLE_PARAMETER;
-import static org.camunda.bpm.camel.component.CamundaBpmConstants.CORRELATION_KEY_NAME_PARAMETER;
-import static org.camunda.bpm.camel.component.CamundaBpmConstants.EXCHANGE_HEADER_BUSINESS_KEY;
-import static org.camunda.bpm.camel.component.CamundaBpmConstants.EXCHANGE_HEADER_CORRELATION_KEY;
-import static org.camunda.bpm.camel.component.CamundaBpmConstants.EXCHANGE_HEADER_CORRELATION_KEY_TYPE;
-import static org.camunda.bpm.camel.component.CamundaBpmConstants.EXCHANGE_HEADER_PROCESS_INSTANCE_ID;
-import static org.camunda.bpm.camel.component.CamundaBpmConstants.MESSAGE_NAME_PARAMETER;
-import static org.camunda.bpm.camel.component.CamundaBpmConstants.camundaBpmUri;
-import static org.mockito.Matchers.anyMap;
-import static org.mockito.Matchers.anyMapOf;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import java.util.Map;
 import org.apache.camel.Exchange;
-import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Message;
 import org.apache.camel.Producer;
+import org.assertj.core.api.Assertions;
 import org.camunda.bpm.camel.BaseCamelTest;
+import org.camunda.bpm.camel.component.CamundaBpmConstants;
 import org.camunda.bpm.camel.component.CamundaBpmEndpoint;
 import org.camunda.bpm.engine.runtime.Execution;
 import org.camunda.bpm.engine.runtime.ExecutionQuery;
 import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.engine.runtime.ProcessInstanceQuery;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
-public class MessageProducerTest extends BaseCamelTest {
+class MessageProducerTest extends BaseCamelTest {
 
   @Test
-  public void getSignalProcessProducerFromUri() throws Exception {
+  void getSignalProcessProducerFromUri() throws Exception {
     CamundaBpmEndpoint endpoint = (CamundaBpmEndpoint) camelContext.getEndpoint(
-        camundaBpmUri("message?" + ACTIVITY_ID_PARAMETER + "=" + "anActivityId"));
+        CamundaBpmConstants.camundaBpmUri(
+            "message?" + CamundaBpmConstants.ACTIVITY_ID_PARAMETER + "=" + "anActivityId"));
     Producer producer = endpoint.createProducer();
-    assertThat(producer).isInstanceOf(MessageProducer.class);
+    Assertions.assertThat(producer).isInstanceOf(MessageProducer.class);
   }
 
-  @SuppressWarnings("unchecked")
   @Test
-  public void messageIsDeliveredCalled() throws Exception {
+  void messageIsDeliveredCalled() throws Exception {
     ProcessInstance processInstance = mock(ProcessInstance.class);
-    when(processInstance.getProcessInstanceId()).thenReturn("theProcessInstanceId");
-    when(processInstance.getProcessDefinitionId()).thenReturn("theProcessDefinitionId");
-    when(
-        runtimeService.startProcessInstanceByKey(eq("aProcessDefinitionKey"), anyMap())).thenReturn(
-        processInstance);
+    Mockito.when(processInstance.getProcessInstanceId()).thenReturn("theProcessInstanceId");
+    Mockito.when(processInstance.getProcessDefinitionId()).thenReturn("theProcessDefinitionId");
+    Mockito
+        .when(runtimeService.startProcessInstanceByKey(
+            eq("aProcessDefinitionKey"),
+            anyMap()))
+        .thenReturn(processInstance);
 
     CamundaBpmEndpoint endpoint = (CamundaBpmEndpoint) camelContext.getEndpoint(
-        camundaBpmUri("message?" + ACTIVITY_ID_PARAMETER + "=" + "anActivityId"));
+        CamundaBpmConstants.camundaBpmUri(
+            "message?" + CamundaBpmConstants.ACTIVITY_ID_PARAMETER + "=" + "anActivityId"));
     Producer producer = endpoint.createProducer();
-    assertThat(producer).isInstanceOf(MessageProducer.class);
+    Assertions.assertThat(producer).isInstanceOf(MessageProducer.class);
   }
 
-  @SuppressWarnings("unchecked")
   @Test
-  public void signalCalled() throws Exception {
+  void signalCalled() throws Exception {
     Exchange exchange = mock(Exchange.class);
     Message message = mock(Message.class);
     ExecutionQuery query = mock(ExecutionQuery.class);
     Execution execution = mock(Execution.class);
 
-    when(exchange.getIn()).thenReturn(message);
-    when(
-        exchange.getProperty(eq(EXCHANGE_HEADER_PROCESS_INSTANCE_ID), eq(String.class))).thenReturn(
-        "theProcessInstanceId");
-    when(runtimeService.createExecutionQuery()).thenReturn(query);
-    when(query.processInstanceId(anyString())).thenReturn(query);
-    when(query.activityId(anyString())).thenReturn(query);
-    when(query.singleResult()).thenReturn(execution);
-    when(execution.getId()).thenReturn("1234");
+    Mockito.when(exchange.getIn()).thenReturn(message);
+    Mockito.when(
+        exchange.getProperty(CamundaBpmConstants.EXCHANGE_HEADER_PROCESS_INSTANCE_ID, String.class))
+        .thenReturn("theProcessInstanceId");
+    Mockito.when(runtimeService.createExecutionQuery()).thenReturn(query);
+    Mockito.when(query.processInstanceId(anyString())).thenReturn(query);
+    Mockito.when(query.activityId(anyString())).thenReturn(query);
+    Mockito.when(query.singleResult()).thenReturn(execution);
+    Mockito.when(execution.getId()).thenReturn("1234");
 
     CamundaBpmEndpoint endpoint = (CamundaBpmEndpoint) camelContext.getEndpoint(
-        camundaBpmUri("message?" + ACTIVITY_ID_PARAMETER + "=" + "anActivityId"));
+        CamundaBpmConstants.camundaBpmUri(
+            "message?" + CamundaBpmConstants.ACTIVITY_ID_PARAMETER + "=" + "anActivityId"));
     Producer producer = endpoint.createProducer();
 
     producer.process(exchange);
 
-    verify(runtimeService).signal(anyString(), anyMap());
+    Mockito.verify(runtimeService).signal(anyString(), anyMap());
   }
 
   @Test
-  public void signalTransformBusinesskey() throws Exception {
-    Exchange exchange = mock(ExtendedExchange.class);
+  void signalTransformBusinessKey() throws Exception {
+    Exchange exchange = mock(Exchange.class);
     Message message = mock(Message.class);
     ExecutionQuery query = mock(ExecutionQuery.class);
     Execution execution = mock(Execution.class);
     ProcessInstanceQuery piQuery = mock(ProcessInstanceQuery.class);
     ProcessInstance processInstance = mock(ProcessInstance.class);
 
-    when(exchange.getIn()).thenReturn(message);
-    when(exchange.getProperty(eq(EXCHANGE_HEADER_BUSINESS_KEY), eq(String.class))).thenReturn(
-        "theBusinessKey");
+    Mockito.when(exchange.getIn()).thenReturn(message);
+    Mockito
+        .when(exchange.getProperty(CamundaBpmConstants.EXCHANGE_HEADER_BUSINESS_KEY, String.class))
+        .thenReturn("theBusinessKey");
 
-    when(runtimeService.createProcessInstanceQuery()).thenReturn(piQuery);
-    when(runtimeService.createExecutionQuery()).thenReturn(query);
-    when(piQuery.processInstanceBusinessKey(anyString())).thenReturn(piQuery);
-    when(piQuery.singleResult()).thenReturn(processInstance);
-    when(processInstance.getId()).thenReturn("theProcessInstanceId");
+    Mockito.when(runtimeService.createProcessInstanceQuery()).thenReturn(piQuery);
+    Mockito.when(runtimeService.createExecutionQuery()).thenReturn(query);
+    Mockito.when(piQuery.processInstanceBusinessKey(anyString())).thenReturn(piQuery);
+    Mockito.when(piQuery.singleResult()).thenReturn(processInstance);
+    Mockito.when(processInstance.getId()).thenReturn("theProcessInstanceId");
 
-    when(query.processInstanceId(anyString())).thenReturn(query);
-    when(query.activityId(anyString())).thenReturn(query);
-    when(query.singleResult()).thenReturn(execution);
+    Mockito.when(query.processInstanceId(anyString())).thenReturn(query);
+    Mockito.when(query.activityId(anyString())).thenReturn(query);
+    Mockito.when(query.singleResult()).thenReturn(execution);
 
     CamundaBpmEndpoint endpoint = (CamundaBpmEndpoint) camelContext.getEndpoint(
-        camundaBpmUri("message?" + ACTIVITY_ID_PARAMETER + "=" + "anActivityId"));
+        CamundaBpmConstants.camundaBpmUri(
+            "message?" + CamundaBpmConstants.ACTIVITY_ID_PARAMETER + "=" + "anActivityId"));
     Producer producer = endpoint.createProducer();
 
     producer.process(exchange);
 
-    verify(piQuery).processInstanceBusinessKey("theBusinessKey");
-    verify(query).processInstanceId("theProcessInstanceId");
+    Mockito.verify(piQuery).processInstanceBusinessKey("theBusinessKey");
+    Mockito.verify(query).processInstanceId("theProcessInstanceId");
   }
 
-  @SuppressWarnings("unchecked")
   @Test
-  public void messageProcessInstanceId() throws Exception {
+  void messageProcessInstanceId() throws Exception {
     Exchange exchange = mock(Exchange.class);
     Message message = mock(Message.class);
     ExecutionQuery query = mock(ExecutionQuery.class);
     Execution execution = mock(Execution.class);
 
-    when(exchange.getIn()).thenReturn(message);
-    when(
-        exchange.getProperty(eq(EXCHANGE_HEADER_PROCESS_INSTANCE_ID), eq(String.class))).thenReturn(
-        "theProcessInstanceId");
-    when(runtimeService.createExecutionQuery()).thenReturn(query);
-    when(query.processInstanceId(anyString())).thenReturn(query);
-    when(query.messageEventSubscriptionName(anyString())).thenReturn(query);
-    when(query.singleResult()).thenReturn(execution);
-    when(execution.getId()).thenReturn("theExecutionId");
+    Mockito.when(exchange.getIn()).thenReturn(message);
+    Mockito
+        .when(exchange.getProperty(
+            CamundaBpmConstants.EXCHANGE_HEADER_PROCESS_INSTANCE_ID,
+            String.class))
+        .thenReturn("theProcessInstanceId");
+    Mockito.when(runtimeService.createExecutionQuery()).thenReturn(query);
+    Mockito.when(query.processInstanceId(anyString())).thenReturn(query);
+    Mockito.when(query.messageEventSubscriptionName(anyString())).thenReturn(query);
+    Mockito.when(query.singleResult()).thenReturn(execution);
+    Mockito.when(execution.getId()).thenReturn("theExecutionId");
 
     CamundaBpmEndpoint endpoint = (CamundaBpmEndpoint) camelContext.getEndpoint(
-        camundaBpmUri("message?" + MESSAGE_NAME_PARAMETER + "=" + "aMessageName"));
+        CamundaBpmConstants.camundaBpmUri(
+            "message?" + CamundaBpmConstants.MESSAGE_NAME_PARAMETER + "=" + "aMessageName"));
     Producer producer = endpoint.createProducer();
 
     producer.process(exchange);
 
-    verify(query).processInstanceId("theProcessInstanceId");
-    verify(query).messageEventSubscriptionName("aMessageName");
+    Mockito.verify(query).processInstanceId("theProcessInstanceId");
+    Mockito.verify(query).messageEventSubscriptionName("aMessageName");
 
-    verify(runtimeService).messageEventReceived(eq("aMessageName"), eq("theExecutionId"), anyMap());
+    Mockito.verify(runtimeService)
+        .messageEventReceived(eq("aMessageName"), eq("theExecutionId"), anyMap());
   }
 
-  @SuppressWarnings("unchecked")
   @Test
-  public void messageBusinessKey() throws Exception {
+  void messageBusinessKey() throws Exception {
     Exchange exchange = mock(Exchange.class);
     Message message = mock(Message.class);
 
-    when(exchange.getIn()).thenReturn(message);
-    when(exchange.getProperty(eq(EXCHANGE_HEADER_BUSINESS_KEY), eq(String.class))).thenReturn(
-        "theBusinessKey");
+    Mockito.when(exchange.getIn()).thenReturn(message);
+    Mockito.when(exchange.getProperty(CamundaBpmConstants.EXCHANGE_HEADER_BUSINESS_KEY, String.class))
+        .thenReturn("theBusinessKey");
 
     CamundaBpmEndpoint endpoint = (CamundaBpmEndpoint) camelContext.getEndpoint(
-        camundaBpmUri("message?" + MESSAGE_NAME_PARAMETER + "=" + "aMessageName"));
+        CamundaBpmConstants.camundaBpmUri(
+            "message?" + CamundaBpmConstants.MESSAGE_NAME_PARAMETER + "=" + "aMessageName"));
     Producer producer = endpoint.createProducer();
 
     producer.process(exchange);
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings("rawtypes,unchecked")
     Class<Map<String, Object>> mapClass = (Class<Map<String, Object>>) (Class) Map.class;
     ArgumentCaptor<Map<String, Object>> correlationCaptor = ArgumentCaptor.forClass(mapClass);
 
-    verify(runtimeService).correlateMessage(eq("aMessageName"),
+    Mockito.verify(runtimeService).correlateMessage(eq("aMessageName"),
         eq("theBusinessKey"),
         correlationCaptor.capture(),
         anyMap());
 
-    assertThat(correlationCaptor.getValue()).isEmpty();
+    Assertions.assertThat(correlationCaptor.getValue()).isEmpty();
   }
 
-  @SuppressWarnings("unchecked")
   @Test
-  public void messageBusinessKeyCorrelationKey() throws Exception {
+  void messageBusinessKeyCorrelationKey() throws Exception {
     Exchange exchange = mock(Exchange.class);
     Message message = mock(Message.class);
 
     final String BODY = "body";
-    when(message.getBody()).thenReturn(BODY);
-    when(exchange.getIn()).thenReturn(message);
-    when(exchange.getProperty(eq(EXCHANGE_HEADER_BUSINESS_KEY), eq(String.class))).thenReturn(
-        "theBusinessKey");
-    when(exchange.getProperty(eq(EXCHANGE_HEADER_CORRELATION_KEY), eq(String.class))).thenReturn(
-        "theCorrelationKey");
+    Mockito.when(message.getBody()).thenReturn(BODY);
+    Mockito.when(exchange.getIn()).thenReturn(message);
+    Mockito.when(exchange.getProperty(CamundaBpmConstants.EXCHANGE_HEADER_BUSINESS_KEY, String.class))
+        .thenReturn("theBusinessKey");
+    Mockito.when(exchange.getProperty(CamundaBpmConstants.EXCHANGE_HEADER_CORRELATION_KEY, String.class))
+        .thenReturn("theCorrelationKey");
 
-    CamundaBpmEndpoint endpoint = (CamundaBpmEndpoint) camelContext.getEndpoint(camundaBpmUri(
-        "message?" + MESSAGE_NAME_PARAMETER + "=" + "aMessageName" + "&"
-            + CORRELATION_KEY_NAME_PARAMETER + "="
-            + "aCorrelationKeyName" + "&" + COPY_MESSAGE_BODY_AS_PROCESS_VARIABLE_PARAMETER
-            + "=test"));
+    CamundaBpmEndpoint endpoint = (CamundaBpmEndpoint) camelContext.getEndpoint(
+        CamundaBpmConstants.camundaBpmUri(
+            "message?" + CamundaBpmConstants.MESSAGE_NAME_PARAMETER + "=aMessageName"
+                + "&" + CamundaBpmConstants.CORRELATION_KEY_NAME_PARAMETER + "=aCorrelationKeyName"
+                + "&" + CamundaBpmConstants.COPY_MESSAGE_BODY_AS_PROCESS_VARIABLE_PARAMETER + "=test"));
 
     Producer producer = endpoint.createProducer();
 
     producer.process(exchange);
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({"rawtypes", "unchecked"})
     Class<Map<String, Object>> mapClass = (Class<Map<String, Object>>) (Class) Map.class;
     ArgumentCaptor<Map<String, Object>> correlationCaptor = ArgumentCaptor.forClass(mapClass);
     ArgumentCaptor<Map<String, Object>> variablesCaptor = ArgumentCaptor.forClass(mapClass);
 
-    verify(runtimeService).correlateMessage(eq("aMessageName"),
+    Mockito.verify(runtimeService).correlateMessage(eq("aMessageName"),
         eq("theBusinessKey"),
         correlationCaptor.capture(),
         variablesCaptor.capture());
 
-    assertThat(correlationCaptor.getValue()).hasSize(1);
-    assertThat(correlationCaptor.getValue().keySet()).contains("aCorrelationKeyName");
-    assertThat(correlationCaptor.getValue().values()).contains("theCorrelationKey");
-    assertThat(variablesCaptor.getValue()).hasSize(1);
-    assertThat(variablesCaptor.getValue()).containsKey("test");
-    assertThat(variablesCaptor.getValue()).containsValue(BODY);
+    Assertions.assertThat(correlationCaptor.getValue()).hasSize(1);
+    Assertions.assertThat(correlationCaptor.getValue())
+        .containsEntry("aCorrelationKeyName", "theCorrelationKey");
+    Assertions.assertThat(variablesCaptor.getValue()).hasSize(1);
+    Assertions.assertThat(variablesCaptor.getValue()).containsEntry("test", BODY);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"rawtypes", "unchecked"})
   @Test
-  public void messageBusinessKeyCorrelationKeyType() throws Exception {
+  void messageBusinessKeyCorrelationKeyType() throws Exception {
     Exchange exchange = mock(Exchange.class);
     Message message = mock(Message.class);
 
-    when(exchange.getIn()).thenReturn(message);
-    when(exchange.getProperty(eq(EXCHANGE_HEADER_BUSINESS_KEY), eq(String.class))).thenReturn(
-        "theBusinessKey");
+    Mockito.when(exchange.getIn()).thenReturn(message);
+    Mockito
+        .when(exchange.getProperty(
+            CamundaBpmConstants.EXCHANGE_HEADER_BUSINESS_KEY,
+            String.class))
+        .thenReturn("theBusinessKey");
 
-    when(exchange.getProperty(eq(EXCHANGE_HEADER_CORRELATION_KEY),
-        eq(java.lang.Integer.class))).thenReturn(15);
+    Mockito
+        .when(exchange.getProperty(
+            CamundaBpmConstants.EXCHANGE_HEADER_CORRELATION_KEY,
+            Integer.class))
+        .thenReturn(15);
 
-    when(exchange.getProperty(eq(EXCHANGE_HEADER_CORRELATION_KEY_TYPE),
-        eq(String.class))).thenReturn(
-        "java.lang.Integer");
+    Mockito
+        .when(exchange.getProperty(
+            CamundaBpmConstants.EXCHANGE_HEADER_CORRELATION_KEY_TYPE,
+            String.class))
+        .thenReturn("java.lang.Integer");
 
-    CamundaBpmEndpoint endpoint = (CamundaBpmEndpoint) camelContext.getEndpoint(camundaBpmUri(
-        "message?" + MESSAGE_NAME_PARAMETER + "=" + "aMessageName" + "&"
-            + CORRELATION_KEY_NAME_PARAMETER + "="
-            + "aCorrelationKeyName" + "&" + EXCHANGE_HEADER_CORRELATION_KEY_TYPE
-            + "=java.lang.Integer"));
+    CamundaBpmEndpoint endpoint = (CamundaBpmEndpoint) camelContext.getEndpoint(
+        CamundaBpmConstants.camundaBpmUri(
+            "message?" + CamundaBpmConstants.MESSAGE_NAME_PARAMETER + "=aMessageName" + "&"
+                + CamundaBpmConstants.CORRELATION_KEY_NAME_PARAMETER + "=aCorrelationKeyName" + "&"
+                + CamundaBpmConstants.EXCHANGE_HEADER_CORRELATION_KEY_TYPE + "=java.lang.Integer"));
 
     Producer producer = endpoint.createProducer();
 
     producer.process(exchange);
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({"rawtypes", "unchecked"})
     Class<Map<String, Object>> mapClass = (Class<Map<String, Object>>) (Class) Map.class;
     ArgumentCaptor<Map<String, Object>> correlationCaptor = ArgumentCaptor.forClass(mapClass);
 
-    verify(runtimeService).correlateMessage(eq("aMessageName"),
+    Mockito.verify(runtimeService).correlateMessage(eq("aMessageName"),
         eq("theBusinessKey"),
         correlationCaptor.capture(),
         anyMap());
 
-    assertThat(correlationCaptor.getValue()).hasSize(1);
-    assertThat(correlationCaptor.getValue().keySet()).contains("aCorrelationKeyName");
-    assertThat(correlationCaptor.getValue().values()).contains(15);
+    Assertions.assertThat(correlationCaptor.getValue()).hasSize(1);
+    Assertions.assertThat(correlationCaptor.getValue()).containsEntry("aCorrelationKeyName", 15);
 
   }
 
-  @SuppressWarnings("unchecked")
   @Test
-  public void messageNoKey() throws Exception {
+  void messageNoKey() throws Exception {
     Exchange exchange = mock(Exchange.class);
     Message message = mock(Message.class);
 
-    when(exchange.getIn()).thenReturn(message);
+    Mockito.when(exchange.getIn()).thenReturn(message);
 
     CamundaBpmEndpoint endpoint = (CamundaBpmEndpoint) camelContext.getEndpoint(
-        camundaBpmUri("message?" + MESSAGE_NAME_PARAMETER + "=" + "aMessageName"));
+        CamundaBpmConstants.camundaBpmUri(
+            "message?" + CamundaBpmConstants.MESSAGE_NAME_PARAMETER + "=" + "aMessageName"));
     Producer producer = endpoint.createProducer();
 
     producer.process(exchange);
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({"rawtypes", "unchecked"})
     Class<Map<String, Object>> mapClass = (Class<Map<String, Object>>) (Class) Map.class;
     ArgumentCaptor<Map<String, Object>> correlationCaptor = ArgumentCaptor.forClass(mapClass);
-    verify(runtimeService).correlateMessage(eq("aMessageName"),
-        correlationCaptor.capture(),
-        anyMapOf(String.class, Object.class));
+    Mockito.verify(runtimeService).correlateMessage(eq("aMessageName"),
+        correlationCaptor.capture(), anyMap());
 
-    assertThat(correlationCaptor.getValue()).isEmpty();
+    Assertions.assertThat(correlationCaptor.getValue()).isEmpty();
   }
 
-  @SuppressWarnings("unchecked")
   @Test
-  public void messageCorrelationKey() throws Exception {
+  void messageCorrelationKey() throws Exception {
     Exchange exchange = mock(Exchange.class);
     Message message = mock(Message.class);
 
-    when(exchange.getIn()).thenReturn(message);
-    when(exchange.getProperty(eq(EXCHANGE_HEADER_CORRELATION_KEY), eq(String.class))).thenReturn(
-        "theCorrelationKey");
+    Mockito.when(exchange.getIn()).thenReturn(message);
+    Mockito
+        .when(exchange.getProperty(
+            CamundaBpmConstants.EXCHANGE_HEADER_CORRELATION_KEY,
+            String.class))
+        .thenReturn("theCorrelationKey");
 
     CamundaBpmEndpoint endpoint = (CamundaBpmEndpoint) camelContext.getEndpoint(
-        camundaBpmUri("message?" + MESSAGE_NAME_PARAMETER + "=" + "aMessageName" + "&"
-            + CORRELATION_KEY_NAME_PARAMETER + "=" + "aCorrelationKeyName"));
+        CamundaBpmConstants.camundaBpmUri(
+            "message?" + CamundaBpmConstants.MESSAGE_NAME_PARAMETER + "=aMessageName" + "&"
+            + CamundaBpmConstants.CORRELATION_KEY_NAME_PARAMETER + "=aCorrelationKeyName"));
     Producer producer = endpoint.createProducer();
 
     producer.process(exchange);
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings("rawtypes,unchecked")
     Class<Map<String, Object>> mapClass = (Class<Map<String, Object>>) (Class) Map.class;
     ArgumentCaptor<Map<String, Object>> correlationCaptor = ArgumentCaptor.forClass(mapClass);
-    verify(runtimeService).correlateMessage(eq("aMessageName"),
-        correlationCaptor.capture(),
-        anyMapOf(String.class, Object.class));
+    Mockito.verify(runtimeService)
+        .correlateMessage(
+            eq("aMessageName"),
+            correlationCaptor.capture(),
+            anyMap());
 
-    assertThat(correlationCaptor.getValue()).hasSize(1);
-    assertThat(correlationCaptor.getValue().keySet()).contains("aCorrelationKeyName");
-    assertThat(correlationCaptor.getValue().values()).contains("theCorrelationKey");
+    Assertions.assertThat(correlationCaptor.getValue()).hasSize(1);
+    Assertions.assertThat(correlationCaptor.getValue())
+        .containsEntry("aCorrelationKeyName", "theCorrelationKey");
   }
 
   @Test
-  public void shouldFailWithoutMessageActivityId() {
+  void shouldFailWithoutMessageActivityId() {
     CamundaBpmEndpoint endpoint = (CamundaBpmEndpoint) camelContext.getEndpoint(
-        camundaBpmUri("message"));
-
-    assertThatThrownBy(endpoint::createProducer)
-        .isInstanceOf(IllegalArgumentException.class);
+        CamundaBpmConstants.camundaBpmUri("message"));
+    org.junit.jupiter.api.Assertions.assertThrows(
+        IllegalArgumentException.class,
+        endpoint::createProducer);
   }
 }

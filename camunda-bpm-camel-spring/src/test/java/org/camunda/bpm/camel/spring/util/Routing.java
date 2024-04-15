@@ -7,12 +7,11 @@ package org.camunda.bpm.camel.spring.util;
  *
  */
 public enum Routing {
-
 	/**
 	 * Process should terminate normally.
 	 */
 	DEFAULT,
-	
+
 	/**
 	 * Camel route should throw an exception and propagate it back to the caller.
 	 */
@@ -22,5 +21,4 @@ public enum Routing {
 	 * Camel route should throw an exception and handle it.
 	 */
 	HANDLE_ERROR;
-	
 }

@@ -45,11 +45,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class CamundaBpmPollExternalTasksEndpointImpl extends DefaultPollingEndpoint implements CamundaBpmEndpoint {
-
     private static final Logger LOG = LoggerFactory.getLogger(
             CamundaBpmPollExternalTasksEndpointImpl.class.getCanonicalName());
 
-    private CamundaBpmComponent component;
+    private final CamundaBpmComponent component;
 
     // parameters
     private final String topic;
@@ -65,11 +64,8 @@ public class CamundaBpmPollExternalTasksEndpointImpl extends DefaultPollingEndpo
 
     public CamundaBpmPollExternalTasksEndpointImpl(final String endpointUri, final CamundaBpmComponent component,
             final Map<String, Object> parameters) {
-
         super(endpointUri, component);
-
         this.component = component;
-
         if (parameters.containsKey(TOPIC_PARAMETER)) {
             this.topic = (String) parameters.remove(TOPIC_PARAMETER);
         } else {
@@ -127,7 +123,7 @@ public class CamundaBpmPollExternalTasksEndpointImpl extends DefaultPollingEndpo
         if (parameters.containsKey(VARIABLESTOFETCH_PARAMETER)) {
             final String variables = (String) parameters.remove(VARIABLESTOFETCH_PARAMETER);
             if (variables.trim().isEmpty()) {
-                variablesToFetch = new LinkedList<String>();
+                variablesToFetch = new LinkedList<>();
             } else {
                 variablesToFetch = StringUtil.splitListBySeparator(variables, ",");
             }
@@ -146,7 +142,6 @@ public class CamundaBpmPollExternalTasksEndpointImpl extends DefaultPollingEndpo
         } else {
             this.deserializeVariables = DESERIALIZEVARIABLES_DEFAULT;
         }
-
     }
 
     @Override
@@ -157,7 +152,6 @@ public class CamundaBpmPollExternalTasksEndpointImpl extends DefaultPollingEndpo
 
     @Override
     public Consumer createConsumer(Processor processor) throws Exception {
-
         final BatchConsumer consumer;
         if (getScheduledExecutorService() != null) {
             consumer = new BatchConsumer(this,
@@ -189,38 +183,25 @@ public class CamundaBpmPollExternalTasksEndpointImpl extends DefaultPollingEndpo
         consumer.setMaxMessagesPerPoll(maxTasksPerPoll);
 
         return consumer;
-
     }
 
     @Override
-    public PollingConsumer createPollingConsumer() throws Exception {
-
+    public PollingConsumer createPollingConsumer() {
         return null;
-        // return new
-        // org.camunda.bpm.camel.component.externaltasks.PollingConsumer(this,
-        // topic);
-
     }
 
     @Override
-    public Producer createProducer() throws Exception {
-
+    public Producer createProducer() {
         return null;
-
     }
 
     @Override
     public boolean isSingleton() {
-
         return true;
-
     }
 
     @Override
     public ProcessEngine getProcessEngine() {
-
         return component.getProcessEngine();
-
     }
-
 }

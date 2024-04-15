@@ -48,7 +48,6 @@ public class StartProcessProducer extends CamundaBpmProducer {
       this.processDefinitionKey = (String) parameters.get(PROCESS_DEFINITION_KEY_PARAMETER);
     } else {
         processDefinitionKey = null;
-      // throw new IllegalArgumentException("You need to pass the '" + PROCESS_DEFINITION_KEY_PARAMETER + "' parameter! Parameters received: " + parameters);
     }
   }
 
@@ -60,7 +59,7 @@ public class StartProcessProducer extends CamundaBpmProducer {
 
   @Override
   public void process(Exchange exchange) throws Exception {
-    Map<String, Object> processVariables = new HashMap<String, Object>();
+    Map<String, Object> processVariables = new HashMap<>();
     if (parameters.containsKey(COPY_MESSAGE_PROPERTIES_PARAMETER)) {
       processVariables.putAll(exchange.getProperties());
     }
@@ -95,24 +94,23 @@ public class StartProcessProducer extends CamundaBpmProducer {
       final String variableName = parameters.get(COPY_PROCESS_VARIABLES_TO_OUT_BODY_PARAMETER).toString();
 
       if (variableName.equals("*")) {
-        exchange.getOut().setBody(instance.getVariables());
+        exchange.getMessage().setBody(instance.getVariables());
       } else if (variableName.contains(",")) {
-        final HashMap<String, Object> variables = new HashMap<String, Object>();
+        final HashMap<String, Object> variables = new HashMap<>();
         for (final String variableNameItem : variableName.split(",")) {
           Object val = instance.getVariables().get(variableNameItem);
           if (val != null) {
             variables.put(variableNameItem, val);
           }
         }
-        exchange.getOut().setBody(variables);
+        exchange.getMessage().setBody(variables);
       } else if (!variableName.trim().isEmpty()) {
-        exchange.getOut().setBody(instance.getVariables().get(variableName));
+        exchange.getMessage().setBody(instance.getVariables().get(variableName));
       } else {
-        exchange.getOut().setBody(instance.getProcessInstanceId());
+        exchange.getMessage().setBody(instance.getProcessInstanceId());
       }
     } else {
-      exchange.getOut().setBody(instance.getProcessInstanceId());
+      exchange.getMessage().setBody(instance.getProcessInstanceId());
     }
   }
-
 }

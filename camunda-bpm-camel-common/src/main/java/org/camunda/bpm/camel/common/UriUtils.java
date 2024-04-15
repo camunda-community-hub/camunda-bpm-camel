@@ -28,17 +28,13 @@ public class UriUtils {
          *            or component prefix
          */
         public ParsedUri(final String remainingUri) {
-
             this.remainingUri = remainingUri;
-
             components = parseUri(remainingUri);
-            if ((components == null) || (components.length == 0)) {
+            if (components.length == 0) {
                 throw new RuntimeException("Cannot create a producer for URI '" + remainingUri + "'");
             }
-
             final String identifier = components[0];
             type = UriType.typeByIdentifier(identifier);
-
         }
 
         public String[] getComponents() {
@@ -48,7 +44,6 @@ public class UriUtils {
         public UriType getType() {
             return type;
         }
-
         /**
          * @return the remaining part of the URI without the query parameters or
          *         component prefix
@@ -56,38 +51,33 @@ public class UriUtils {
         public String getRemainingUri() {
             return remainingUri;
         }
-
     }
 
     public enum UriType {
+        START_PR("start"),
+        SEND_SIGNAL("signal"),
+        SEND_MESSAGE("message"),
+        POLL_EXTERNAL_TASKS("poll-externalTasks"),
+        PROCESS_EXTERNAL_TASK("async-externalTask");
 
-        StartProcess("start"), SendSignal("signal"), SendMessage("message"),
-        		PollExternalTasks("poll-externalTasks"), ProcessExternalTask("async-externalTask");
-
-        private String identifier;
+        private final String identifier;
 
         UriType(final String identifier) {
             this.identifier = identifier;
         }
 
         public static UriType typeByIdentifier(final String identifier) {
-
             for (final UriType type : values()) {
                 if (type.identifier.equals(identifier)) {
                     return type;
                 }
             }
-
             throw new RuntimeException("Cannot create a producer for identifier '" + identifier + "'");
-
         }
-
-    };
-
-    public static String[] parseUri(String remainingUri) {
-
-        return remainingUri.split("/");
 
     }
 
+    public static String[] parseUri(String remainingUri) {
+        return remainingUri.split("/");
+    }
 }

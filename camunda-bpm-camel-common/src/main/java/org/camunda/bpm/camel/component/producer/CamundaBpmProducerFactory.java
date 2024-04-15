@@ -22,25 +22,18 @@ import org.camunda.bpm.camel.component.CamundaBpmEndpoint;
  */
 public final class CamundaBpmProducerFactory {
 
-    // private static final Logger log =
-    // LoggerFactory.getLogger(CamundaBpmFactory.class);
-
     private CamundaBpmProducerFactory() {
-    } // Prevent instantiation of helper class
+        throw new UnsupportedOperationException("This class cannot be instantiated");
+    }
 
     public static CamundaBpmProducer createProducer(final CamundaBpmEndpoint endpoint, final ParsedUri uri,
             final Map<String, Object> parameters) throws IllegalArgumentException {
-
-        switch (uri.getType()) {
-        case StartProcess:
-            return new StartProcessProducer(endpoint, parameters);
-        case SendSignal:
-        case SendMessage:
-            return new MessageProducer(endpoint, parameters);
-        default:
-            throw new IllegalArgumentException("Cannot create a producer for URI '" + uri + "' - new ProducerType '"
-                    + uri.getType() + "' not yet supported?");
-        }
+        return switch (uri.getType()) {
+            case START_PR -> new StartProcessProducer(endpoint, parameters);
+            case SEND_SIGNAL, SEND_MESSAGE -> new MessageProducer(endpoint, parameters);
+            default -> throw new IllegalArgumentException("Cannot create a producer for URI '" + uri
+                + "' - new ProducerType '" + uri.getType() + "' not yet supported?");
+        };
 
     }
 

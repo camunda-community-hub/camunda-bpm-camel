@@ -46,7 +46,6 @@ import org.slf4j.LoggerFactory;
  * @author Bernd Ruecker
  */
 public class MessageProducer extends CamundaBpmProducer {
-
     private static final Logger LOG = LoggerFactory.getLogger(MessageProducer.class);
 
     private final String messageName;
@@ -88,7 +87,6 @@ public class MessageProducer extends CamundaBpmProducer {
     }
 
     @Override
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     public void process(Exchange exchange) throws Exception {
         String processInstanceId = exchange.getProperty(EXCHANGE_HEADER_PROCESS_INSTANCE_ID, String.class);
         String businessKey = exchange.getProperty(EXCHANGE_HEADER_BUSINESS_KEY, String.class);
@@ -96,10 +94,10 @@ public class MessageProducer extends CamundaBpmProducer {
         Map<String, Object> processVariables = ExchangeUtils.prepareVariables(exchange, parameters);
 
         if (messageName != null) {
-            HashMap<String, Object> correlationKeys = new HashMap<String, Object>();
+            HashMap<String, Object> correlationKeys = new HashMap<>();
 
             if (correlationKeyName != null) {
-                Class clazz = String.class;
+                Class<?> clazz = String.class;
                 String correlationKeyType = exchange.getProperty(EXCHANGE_HEADER_CORRELATION_KEY_TYPE, String.class);
                 if (correlationKeyType != null) {
                     clazz = Class.forName(correlationKeyType);

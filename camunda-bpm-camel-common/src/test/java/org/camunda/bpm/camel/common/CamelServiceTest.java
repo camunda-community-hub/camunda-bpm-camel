@@ -1,40 +1,37 @@
 package org.camunda.bpm.camel.common;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.camunda.bpm.camel.component.CamundaBpmConstants.EXCHANGE_HEADER_BUSINESS_KEY;
-import static org.camunda.bpm.camel.component.CamundaBpmConstants.EXCHANGE_HEADER_CORRELATION_KEY;
-import static org.camunda.bpm.camel.component.CamundaBpmConstants.EXCHANGE_HEADER_PROCESS_INSTANCE_ID;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-import org.apache.camel.*;
+import org.apache.camel.CamelContext;
+import org.apache.camel.Exchange;
+import org.apache.camel.Message;
+import org.apache.camel.ProducerTemplate;
 import org.assertj.core.api.Assertions;
 import org.camunda.bpm.camel.BaseCamelTest;
+import org.camunda.bpm.camel.component.CamundaBpmConstants;
 import org.camunda.bpm.engine.ProcessEngine;
 import org.camunda.bpm.engine.impl.context.BpmnExecutionContext;
 import org.camunda.bpm.engine.impl.context.Context;
 import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(Context.class)
-public class CamelServiceTest extends BaseCamelTest {
+
+class CamelServiceTest extends BaseCamelTest {
 
   protected CamelServiceCommonImpl service;
   protected ProducerTemplate producerTemplate;
   protected ExecutionEntity execution;
 
-  @Before
+  private MockedStatic<Context> contextMock;
+
+  @BeforeEach
   public void setupService() {
     service = new CamelServiceCommonImpl() {
       @Override
@@ -48,120 +45,127 @@ public class CamelServiceTest extends BaseCamelTest {
       }
     };
     service.setProcessEngine(processEngine);
-    CamelContext camelContext = mock(ExtendedCamelContext.class);
+    CamelContext camelContext = Mockito.mock(CamelContext.class);
     service.setCamelContext(camelContext);
 
-    producerTemplate = mock(ProducerTemplate.class);
-    when(camelContext.createProducerTemplate()).thenReturn(producerTemplate);
+    producerTemplate = Mockito.mock(ProducerTemplate.class);
+    Mockito.when(camelContext.createProducerTemplate()).thenReturn(producerTemplate);
 
-    BpmnExecutionContext executionContext = mock(BpmnExecutionContext.class);
-    execution = mock(ExecutionEntity.class);
+    BpmnExecutionContext executionContext = Mockito.mock(BpmnExecutionContext.class);
+    execution = Mockito.mock(ExecutionEntity.class);
 
-    when(executionContext.getExecution()).thenReturn(execution);
-    when(execution.getProcessInstanceId()).thenReturn("theProcessInstanceId");
-    when(execution.getBusinessKey()).thenReturn("theBusinessKey");
-    when(execution.getVariable(anyString())).thenReturn("theVariable");
+    Mockito.when(executionContext.getExecution()).thenReturn(execution);
+    Mockito.when(execution.getProcessInstanceId()).thenReturn("theProcessInstanceId");
+    Mockito.when(execution.getBusinessKey()).thenReturn("theBusinessKey");
+    Mockito.when(execution.getVariable(anyString())).thenReturn("theVariable");
 
-    PowerMockito.mockStatic(Context.class);
-    PowerMockito.when(Context.getBpmnExecutionContext()).thenReturn(
-        executionContext);
+    contextMock = Mockito.mockStatic(Context.class);
+    contextMock
+        .when(Context::getBpmnExecutionContext)
+        .thenReturn(executionContext);
+  }
+
+  @AfterEach
+  void teardownService() {
+    contextMock.close();
   }
 
   @Test
-  public void testSendToEndpoint() throws Exception {
-    Exchange send = mock(Exchange.class);
-    Message message = mock(Message.class);
-    when(send.getIn()).thenReturn(message);
-    when(producerTemplate.send(anyString(), any(Exchange.class))).thenReturn(
-        send);
+  void testSendToEndpoint() throws Exception {
+    Exchange send = Mockito.mock(Exchange.class);
+    Message message = Mockito.mock(Message.class);
+    Mockito.when(send.getIn()).thenReturn(message);
+    Mockito.when(producerTemplate.send(anyString(), any(Exchange.class)))
+        .thenReturn(send);
 
     ArgumentCaptor<Exchange> exchangeCaptor = ArgumentCaptor
         .forClass(Exchange.class);
 
     service.sendTo("what/ever");
 
-    verify(producerTemplate).send(anyString(), exchangeCaptor.capture());
-    verify(execution).getVariableNames();
+    Mockito.verify(producerTemplate).send(anyString(), exchangeCaptor.capture());
+    Mockito.verify(execution).getVariableNames();
 
-    assertThat(exchangeCaptor.getValue().getProperty(EXCHANGE_HEADER_BUSINESS_KEY))
+    Assertions
+        .assertThat(exchangeCaptor
+            .getValue()
+            .getProperty(CamundaBpmConstants.EXCHANGE_HEADER_BUSINESS_KEY))
         .isEqualTo("theBusinessKey");
-    assertThat(
-        exchangeCaptor.getValue().getProperty(EXCHANGE_HEADER_CORRELATION_KEY))
+    Assertions
+        .assertThat(exchangeCaptor
+            .getValue()
+            .getProperty(CamundaBpmConstants.EXCHANGE_HEADER_CORRELATION_KEY))
         .isNull();
-    assertThat(
-        exchangeCaptor.getValue().getProperty(EXCHANGE_HEADER_PROCESS_INSTANCE_ID))
+    Assertions
+        .assertThat(exchangeCaptor
+            .getValue()
+            .getProperty(CamundaBpmConstants.EXCHANGE_HEADER_PROCESS_INSTANCE_ID))
         .isEqualTo("theProcessInstanceId");
   }
 
   @Test
-  public void testSendToEndpointWithNoVariables() throws Exception {
-    Exchange send = mock(Exchange.class);
-    Message message = mock(Message.class);
-    when(send.getIn()).thenReturn(message);
-    when(producerTemplate.send(anyString(), any(Exchange.class))).thenReturn(
-        send);
+  void testSendToEndpointWithNoVariables() throws Exception {
+    Exchange send = Mockito.mock(Exchange.class);
+    Message message = Mockito.mock(Message.class);
+    Mockito.when(send.getIn()).thenReturn(message);
+    Mockito.when(producerTemplate.send(anyString(), any(Exchange.class))).thenReturn(send);
 
-    ArgumentCaptor<Exchange> exchangeCaptor = ArgumentCaptor
-        .forClass(Exchange.class);
+    ArgumentCaptor<Exchange> exchangeCaptor = ArgumentCaptor.forClass(Exchange.class);
 
     service.sendTo("what/ever", "");
 
-    verify(producerTemplate).send(anyString(), exchangeCaptor.capture());
-    verify(execution, never()).getVariableNames();
+    Mockito.verify(producerTemplate).send(anyString(), exchangeCaptor.capture());
+    Mockito.verify(execution, never()).getVariableNames();
   }
 
   @Test
-  public void testSendToEndpointWithOneVariable() throws Exception {
-    Exchange send = mock(Exchange.class);
-    Message message = mock(Message.class);
-    when(send.getIn()).thenReturn(message);
-    when(producerTemplate.send(anyString(), any(Exchange.class))).thenReturn(
-        send);
+  void testSendToEndpointWithOneVariable() throws Exception {
+    Exchange send = Mockito.mock(Exchange.class);
+    Message message = Mockito.mock(Message.class);
+    Mockito.when(send.getIn()).thenReturn(message);
+    Mockito.when(producerTemplate.send(anyString(), any(Exchange.class))).thenReturn(send);
 
-    ArgumentCaptor<Exchange> exchangeCaptor = ArgumentCaptor
-        .forClass(Exchange.class);
+    ArgumentCaptor<Exchange> exchangeCaptor = ArgumentCaptor.forClass(Exchange.class);
 
     service.sendTo("what/ever", "varName");
 
-    verify(producerTemplate).send(anyString(), exchangeCaptor.capture());
-    verify(execution, never()).getVariableNames();
-    verify(execution).getVariable("varName");
+    Mockito.verify(producerTemplate).send(anyString(), exchangeCaptor.capture());
+    Mockito.verify(execution, never()).getVariableNames();
+    Mockito.verify(execution).getVariable("varName");
   }
 
   @Test
-  public void testSendToEndpointWithAlleVariables() throws Exception {
-    Exchange send = mock(Exchange.class);
-    Message message = mock(Message.class);
-    when(send.getIn()).thenReturn(message);
-    when(producerTemplate.send(anyString(), any(Exchange.class))).thenReturn(
-        send);
+  void testSendToEndpointWithAlleVariables() throws Exception {
+    Exchange send = Mockito.mock(Exchange.class);
+    Message message = Mockito.mock(Message.class);
+    Mockito.when(send.getIn()).thenReturn(message);
+    Mockito.when(producerTemplate.send(anyString(), any(Exchange.class))).thenReturn(send);
 
-    ArgumentCaptor<Exchange> exchangeCaptor = ArgumentCaptor
-        .forClass(Exchange.class);
+    ArgumentCaptor<Exchange> exchangeCaptor = ArgumentCaptor.forClass(Exchange.class);
 
     service.sendTo("what/ever", null);
 
-    verify(producerTemplate).send(anyString(), exchangeCaptor.capture());
-    verify(execution).getVariableNames();
+    Mockito.verify(producerTemplate).send(anyString(), exchangeCaptor.capture());
+    Mockito.verify(execution).getVariableNames();
   }
 
   @Test
-  public void testSendToEndpointWithCorrelation() throws Exception {
-    Exchange send = mock(Exchange.class);
-    Message message = mock(Message.class);
-    when(send.getIn()).thenReturn(message);
-    when(producerTemplate.send(anyString(), any(Exchange.class))).thenReturn(
-        send);
+  void testSendToEndpointWithCorrelation() throws Exception {
+    Exchange send = Mockito.mock(Exchange.class);
+    Message message = Mockito.mock(Message.class);
+    Mockito.when(send.getIn()).thenReturn(message);
+    Mockito.when(producerTemplate.send(anyString(), any(Exchange.class))).thenReturn(send);
 
-    ArgumentCaptor<Exchange> exchangeCaptor = ArgumentCaptor
-        .forClass(Exchange.class);
+    ArgumentCaptor<Exchange> exchangeCaptor = ArgumentCaptor.forClass(Exchange.class);
 
     service.sendTo("what/ever", null, "theCorrelationKey");
 
-    verify(producerTemplate).send(anyString(), exchangeCaptor.capture());
+    Mockito.verify(producerTemplate).send(anyString(), exchangeCaptor.capture());
 
-    assertThat(
-        exchangeCaptor.getValue().getProperty(EXCHANGE_HEADER_CORRELATION_KEY))
+    Assertions
+        .assertThat(exchangeCaptor
+            .getValue()
+            .getProperty(CamundaBpmConstants.EXCHANGE_HEADER_CORRELATION_KEY))
         .isEqualTo("theCorrelationKey");
   }
 }

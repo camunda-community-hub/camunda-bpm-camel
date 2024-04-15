@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
  * @author Rafael Cordones (@rafacm)
  */
 public class CamundaBpmComponent extends DefaultComponent {
-
     final Logger log = LoggerFactory.getLogger(CamundaBpmComponent.class);
 
     protected ProcessEngine processEngine;
@@ -49,18 +48,15 @@ public class CamundaBpmComponent extends DefaultComponent {
     }
 
     @Override
-    protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
-
+    protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) {
         final ParsedUri parsedUri = new ParsedUri(remaining);
-        switch (parsedUri.getType()) {
-        case PollExternalTasks:
-        	return new CamundaBpmPollExternalTasksEndpointImpl(uri, this, parameters);
-        case ProcessExternalTask:
-        	return new CamundaBpmProcessExternalTaskEndpointImpl(uri, this, parameters);
-        default:
-            return new CamundaBpmEndpointDefaultImpl(uri, parsedUri, this, parameters);
-        }
-
+      return switch (parsedUri.getType()) {
+        case POLL_EXTERNAL_TASKS ->
+            new CamundaBpmPollExternalTasksEndpointImpl(uri, this, parameters);
+        case PROCESS_EXTERNAL_TASK ->
+            new CamundaBpmProcessExternalTaskEndpointImpl(uri, this, parameters);
+        default -> new CamundaBpmEndpointDefaultImpl(uri, parsedUri, this, parameters);
+      };
     }
 
     public ProcessEngine getProcessEngine() {

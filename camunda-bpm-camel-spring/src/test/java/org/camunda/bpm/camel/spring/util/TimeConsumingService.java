@@ -7,7 +7,6 @@ package org.camunda.bpm.camel.spring.util;
  *
  */
 public class TimeConsumingService {
-
 	/**
 	 * Spend some time.
 	 * 
@@ -16,5 +15,4 @@ public class TimeConsumingService {
 	public void doWork() throws InterruptedException {
 		Thread.sleep(100);
 	}
-	
 }

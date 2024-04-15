@@ -2,7 +2,6 @@ package org.camunda.bpm.camel.spring;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.assertj.core.api.Assertions;
 import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.TaskService;
 import org.camunda.bpm.engine.task.Task;
@@ -15,15 +14,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:smoke-test-config.xml")
 public class SmokeTest {
 
-  @Autowired(required = true)
+  @Autowired
   RuntimeService runtimeService;
 
-  @Autowired(required = true)
+  @Autowired
   TaskService taskService;
 
   @Autowired
@@ -32,12 +30,12 @@ public class SmokeTest {
 
   @Test
   @Deployment(resources = {"process/SmokeTest.bpmn20.xml"} )
-  public void smokeTest() throws Exception {
+  public void smokeTest() {
     runtimeService.startProcessInstanceByKey("smokeTestProcess");
     Task task = taskService.createTaskQuery().singleResult();
-    assertThat("My Task").isEqualTo(task.getName());
+    assertThat(task.getName()).isEqualTo("My Task");
 
     taskService.complete(task.getId());
-    assertThat(runtimeService.createProcessInstanceQuery().count()).isEqualTo(0);
+    assertThat(runtimeService.createProcessInstanceQuery().count()).isZero();
   }
 }

@@ -28,8 +28,11 @@ import org.slf4j.LoggerFactory;
  * @author Bernd Ruecker
  */
 public class ExchangeUtils {
-
     private static final Logger LOG = LoggerFactory.getLogger(ExchangeUtils.class);
+
+    private ExchangeUtils() {
+        throw new UnsupportedOperationException("This class cannot be instantiated");
+    }
 
     /**
      * Copies variables from Camel into the process engine.
@@ -44,16 +47,13 @@ public class ExchangeUtils {
      *            The Camel Exchange object
      * @param parameters
      *        Parameters as defined in the docs
-     * @return A Map containing all of the variables to be used
+     * @return A Map containing all the variables to be used
      *         in the process engine
      */
-    @SuppressWarnings("rawtypes")
     public static Map<String, Object> prepareVariables(Exchange exchange, Map<String, Object> parameters) {
-        Map<String, Object> processVariables = new HashMap<String, Object>();
-
+        Map<String, Object> processVariables = new HashMap<>();
         Object camelBody = exchange.getIn().getBody();
         if (camelBody instanceof String) {
-
             // If the COPY_MESSAGE_BODY_AS_PROCESS_VARIABLE_PARAMETER was passed
             // the value of it
             // is taken as variable to store the (string) body in
@@ -62,22 +62,18 @@ public class ExchangeUtils {
                 processVariableName = (String) parameters.get(
                         CamundaBpmConstants.COPY_MESSAGE_BODY_AS_PROCESS_VARIABLE_PARAMETER);
             }
-
             processVariables.put(processVariableName, camelBody);
-
-        } else if (camelBody instanceof Map<?, ?>) {
-
-            Map<?, ?> camelBodyMap = (Map<?, ?>) camelBody;
-            for (Map.Entry e : camelBodyMap.entrySet()) {
+        } else if (camelBody instanceof Map<?, ?> camelBodyMap) {
+            for (Map.Entry<?, ?> e : camelBodyMap.entrySet()) {
                 if (e.getKey() instanceof String) {
                     processVariables.put((String) e.getKey(), e.getValue());
                 }
             }
-
-        } else if (camelBody != null) {
-            LOG.warn("unkown type of camel body - not handed over to process engine: " + camelBody.getClass());
+        } else if (camelBody != null && LOG.isWarnEnabled()) {
+            LOG.warn(
+                "unknown type of camel body - not handed over to process engine: {}",
+                camelBody.getClass());
         }
-
         return processVariables;
     }
 }

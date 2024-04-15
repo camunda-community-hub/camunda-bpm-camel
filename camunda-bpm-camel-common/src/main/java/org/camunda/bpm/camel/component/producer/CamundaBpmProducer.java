@@ -25,7 +25,7 @@ public abstract class CamundaBpmProducer extends DefaultProducer {
   protected RuntimeService runtimeService;
   protected Map<String, Object> parameters;
 
-  public CamundaBpmProducer(CamundaBpmEndpoint endpoint, Map<String, Object> parameters) {
+  protected CamundaBpmProducer(CamundaBpmEndpoint endpoint, Map<String, Object> parameters) {
     super(endpoint);
     this.processEngine = endpoint.getProcessEngine();
       if (this.processEngine != null) {
@@ -33,9 +33,7 @@ public abstract class CamundaBpmProducer extends DefaultProducer {
       }
     this.parameters = parameters;
   }
-  
 
-  
   protected CamundaBpmEndpoint getCamundaBpmEndpoint() {
     return (CamundaBpmEndpoint) getEndpoint();
   }  

@@ -5,14 +5,12 @@ import org.camunda.bpm.engine.delegate.ExecutionListener;
 
 /**
  * Attach to the ReceiveTask (end event).
- * 
- * @author stefan.schulze@accelsis.biz
  *
+ * @author stefan.schulze@accelsis.biz
  */
 public class DummyExecutionListener implements ExecutionListener {
-
-    @Override
-    public void notify(DelegateExecution execution) throws Exception {
-        // dummy
-    }
+  @Override
+  public void notify(DelegateExecution execution) {
+    // dummy
+  }
 }

@@ -31,14 +31,14 @@ public interface CamelService {
    *          an Camel {@link org.apache.camel.Endpoint} URI
    *
    * @exception Exception BpmnError: Raises business error in workflow allowing boundary error handling
-   *                      Any other cheched or unchecked exception raises technical error stopping workflow at service task
+   *                      Any other checked or unchecked exception raises technical error stopping workflow at service task
    * 
    * @return the result of the execution of the Camel route
    */
-  public Object sendTo(String endpointUri) throws Exception;
+  Object sendTo(String endpointUri) throws Exception;
 
   /**
-   * Sends the specified process instance variables as a map to an Camel
+   * Sends the specified process instance variables as a map to a Camel
    * {@link org.apache.camel.Endpoint}
    *
    * Example usage in a ServiceTask expression:
@@ -52,14 +52,14 @@ public interface CamelService {
    *          null value sends all
    *
    * @exception Exception BpmnError: Raises business error in workflow allowing boundary error handling
-   *                      Any other cheched or unchecked exception raises technical error stopping workflow at service task
+   *                      Any other checked or unchecked exception raises technical error stopping workflow at service task
    * 
    * @return the result of the execution of the Camel route
    */
-  public Object sendTo(String endpointUri, String processVariables) throws Exception;
+  Object sendTo(String endpointUri, String processVariables) throws Exception;
 
   /**
-   * Sends the specified process instance variables as a map to an Camel
+   * Sends the specified process instance variables as a map to a Camel
    * {@link org.apache.camel.Endpoint} and provide correlationId for callback
    *
    * Example usage in a ServiceTask expression:
@@ -77,10 +77,10 @@ public interface CamelService {
    *          variable which is used for correlation
    * 
    * @exception Exception BpmnError: Raises business error in workflow allowing boundary error handling
-   *                      Any other cheched or unchecked exception raises technical error stopping workflow at service task
+   *                      Any other checked or unchecked exception raises technical error stopping workflow at service task
    *
    * @return the result of the execution of the Camel route
    */
-  public Object sendTo(String endpointUri, String processVariables,
-      String correlationKey) throws Exception;
+  Object sendTo(String endpointUri, String processVariables, String correlationKey)
+      throws Exception;
 }

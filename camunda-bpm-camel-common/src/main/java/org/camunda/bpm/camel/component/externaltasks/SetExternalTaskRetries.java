@@ -34,9 +34,6 @@ import java.lang.annotation.RetentionPolicy;
 @Target(value = { ElementType.TYPE })
 @Retention(value = RetentionPolicy.RUNTIME)
 public @interface SetExternalTaskRetries {
-
-    public int retries();
-
-    public boolean relative() default false;
-
+    int retries();
+    boolean relative() default false;
 }

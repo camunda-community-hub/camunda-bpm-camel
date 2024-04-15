@@ -16,7 +16,5 @@ import org.apache.camel.Endpoint;
 import org.camunda.bpm.engine.ProcessEngine;
 
 public interface CamundaBpmEndpoint extends Endpoint {
-
     ProcessEngine getProcessEngine();
-
 }

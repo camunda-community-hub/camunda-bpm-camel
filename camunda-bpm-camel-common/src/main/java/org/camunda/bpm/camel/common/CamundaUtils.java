@@ -17,17 +17,19 @@ import java.util.concurrent.Callable;
 import org.camunda.bpm.engine.OptimisticLockingException;
 
 public class CamundaUtils {
+    private static final long SLEEP_IN_MS = 250;
+    private static final int DEFAULT_TIMES = 1000;
 
-    private static long sleepInMs = 250;
-    private static int defaultTimes = 1000;
+    private CamundaUtils() {
+        throw new UnsupportedOperationException("This class cannot be instantiated");
+    }
 
     public static <V> V retryIfOptimisticLockingException(final Callable<V> action) {
-        return retryIfOptimisticLockingException(defaultTimes, action);
+        return retryIfOptimisticLockingException(DEFAULT_TIMES, action);
     }
 
     public static <V> V retryIfOptimisticLockingException(int times, final Callable<V> action) {
-
-        OptimisticLockingException lastException = null;
+        OptimisticLockingException lastException;
         do {
             try {
                 return action.call();
@@ -41,25 +43,15 @@ public class CamundaUtils {
             }
 
             try {
-                Thread.sleep(sleepInMs);
+                Thread.sleep(SLEEP_IN_MS);
             } catch (InterruptedException e) {
-                // never minde
+                // never mind
             }
         } while (times > 0);
-
-        final StringBuilder message = new StringBuilder();
-        message.append("Event after ");
-        message.append(times);
-        message.append(" attempts (every delayed for ");
-        message.append(sleepInMs);
-        message.append("ms) an OptimisticLockingException is thrown!");
-        if (lastException != null) {
-            message.append(" message='");
-            message.append(lastException.getMessage());
-            message.append('\'');
-        }
-        throw new OptimisticLockingException(message.toString());
-
+      throw new OptimisticLockingException(
+          "Event after " + times + " attempts (every delayed for " + SLEEP_IN_MS + "ms)" +
+              " an OptimisticLockingException is thrown!" +
+              " message='" + lastException.getMessage() + '\'');
     }
 
 }

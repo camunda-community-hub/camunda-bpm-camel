@@ -24,8 +24,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
-import javax.management.RuntimeErrorException;
-
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
@@ -60,7 +58,7 @@ public abstract class CamelServiceCommonImpl implements CamelService {
       String correlationId) throws Exception {
     Collection<String> vars;
     if (processVariables == null) {
-      vars = new LinkedList<String>();
+      vars = new LinkedList<>();
       ActivityExecution execution = Context.getBpmnExecutionContext()
           .getExecution();
       final Set<String> variableNames = execution.getVariableNames();
@@ -69,7 +67,7 @@ public abstract class CamelServiceCommonImpl implements CamelService {
           vars.add(variableName + "?");
         }
       }
-    } else if ("".equals(processVariables)) {
+    } else if (processVariables.isEmpty()) {
       vars = Collections.emptyList();
     } else {
       vars = Arrays.asList(processVariables.split("\\s*,\\s*"));
@@ -77,58 +75,61 @@ public abstract class CamelServiceCommonImpl implements CamelService {
     return sendToInternal(endpointUri, vars, correlationId);
   }
 
-  private Object sendToInternal(String endpointUri,
+  private Object sendToInternal(
+      String endpointUri,
       Collection<String> variables, String correlationKey) throws Exception {
-    ActivityExecution execution = (ActivityExecution) Context
-        .getBpmnExecutionContext().getExecution();
-    Map<String, Object> variablesToSend = new HashMap<String, Object>();
-    for (String var : variables) {
+    ActivityExecution execution = Context.getBpmnExecutionContext().getExecution();
+    Map<String, Object> variablesToSend = new HashMap<>();
+    for (String variable : variables) {
       Object value;
-      if (var.endsWith("?")) {
-        value = execution.getVariable(var.substring(0, var.length() - 1));
+      if (variable.endsWith("?")) {
+        value = execution.getVariable(variable.substring(0, variable.length() - 1));
       } else {
-        value = execution.getVariable(var);
+        value = execution.getVariable(variable);
         if (value == null) {
-          throw new IllegalArgumentException("Process variable '" + var
-              + "' no found!");
+          throw new IllegalArgumentException("Process variable '" + variable + "' no found!");
         }
       }
-      variablesToSend.put(var, value);
+      variablesToSend.put(variable, value);
     }
 
-    log.debug("Sending process variables '{}' as a map to Camel endpoint '{}'",
-        variablesToSend, endpointUri);
-    ProducerTemplate producerTemplate = camelContext.createProducerTemplate();
-    String businessKey = execution.getBusinessKey();
+    log.debug(
+        "Sending process variables '{}' as a map to Camel endpoint '{}'",
+        variablesToSend,
+        endpointUri);
+    try (ProducerTemplate producerTemplate = camelContext.createProducerTemplate()) {
+      String businessKey = execution.getBusinessKey();
 
-    Exchange exchange = new DefaultExchange(camelContext);
-    exchange.setProperty(EXCHANGE_HEADER_PROCESS_INSTANCE_ID,
-        execution.getProcessInstanceId());
-    if (businessKey != null) {
-      exchange.setProperty(EXCHANGE_HEADER_BUSINESS_KEY, businessKey);
-    }
-    if (correlationKey != null) {
-      exchange.setProperty(EXCHANGE_HEADER_CORRELATION_KEY, correlationKey);
-    }
-    exchange.getIn().setBody(variablesToSend);
-    exchange.setPattern(ExchangePattern.InOut);
-    Exchange send = producerTemplate.send(endpointUri, exchange);       
-    
-    // Exception handling
-    //    Propogate BpmnError back from camel route, 
-    //    all other exceptions will cause workflow to stop as a technical error
-    // https://docs.camunda.org/get-started/rpa/error-handling/
-    // https://docs.camunda.org/manual/7.15/reference/bpmn20/events/error-events/
-    if (null != send.getException()){
-      // Explicit BPMN business error, workflow has a chance to handle on boundry event, throw as is
-      // Note that this can terminate a process instance if no handling is defined in the model (https://docs.camunda.org/manual/latest/user-guide/process-engine/delegation-code/#throw-bpmn-errors-from-listeners)
-      if (send.getException() instanceof BpmnError) throw ((BpmnError)send.getException());
-      
-      // otherwise simply throw the exception, leads to incident in process instance
-      throw send.getException();  
-    }
+      Exchange exchange = new DefaultExchange(camelContext);
+      exchange.setProperty(EXCHANGE_HEADER_PROCESS_INSTANCE_ID, execution.getProcessInstanceId());
+      if (businessKey != null) {
+        exchange.setProperty(EXCHANGE_HEADER_BUSINESS_KEY, businessKey);
+      }
+      if (correlationKey != null) {
+        exchange.setProperty(EXCHANGE_HEADER_CORRELATION_KEY, correlationKey);
+      }
+      exchange.getIn().setBody(variablesToSend);
+      exchange.setPattern(ExchangePattern.InOut);
+      Exchange send = producerTemplate.send(endpointUri, exchange);
 
-    return send.getIn().getBody();    
+      // Exception handling
+      //    Propagate BpmnError back from camel route,
+      //    all other exceptions will cause workflow to stop as a technical error
+      // https://docs.camunda.org/get-started/rpa/error-handling/
+      // https://docs.camunda.org/manual/7.15/reference/bpmn20/events/error-events/
+      if (null != send.getException()) {
+        // Explicit BPMN business error, workflow has a chance to handle on boundary event, throw as is
+        // Note that this can terminate a process instance if no handling is defined in the model (https://docs.camunda.org/manual/latest/user-guide/process-engine/delegation-code/#throw-bpmn-errors-from-listeners)
+        if (send.getException() instanceof BpmnError) {
+          throw send.getException();
+        }
+
+        // otherwise simply throw the exception, leads to incident in process instance
+        throw send.getException();
+      }
+
+      return send.getIn().getBody();
+    }
   }
 
   public abstract void setProcessEngine(ProcessEngine processEngine);

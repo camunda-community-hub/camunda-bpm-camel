@@ -16,17 +16,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class LogServiceImpl implements LogService {
-
   final Logger log = LoggerFactory.getLogger(this.getClass());
 
   @Override
   public void debug(Object msg) {
-    log.debug("LogService: {}", msg.toString());
+    log.debug("LogService: {}", msg);
   }
 
   @Override
   public void info(Object msg) {
-    log.debug("LogService: {}", msg.toString());
+    log.info("LogService: {}", msg);
   }
 
 }
